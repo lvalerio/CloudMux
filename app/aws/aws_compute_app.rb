@@ -1251,6 +1251,8 @@ class AwsComputeApp < ResourceApiBase
 	##~ op.errorResponses.add :reason => "Success, list of network acls returned", :code => 200
 	##~ op.errorResponses.add :reason => "Credentials not supported by cloud", :code => 400
 	get '/network_acls' do
+		# require 'pry'
+		# binding.pry
 	    begin
 	  		filters = params[:filters]
 	  		if(filters.nil?)
@@ -1301,6 +1303,52 @@ class AwsComputeApp < ResourceApiBase
 	delete '/network_acls/:id' do
 		begin
 			response = @compute.network_acls.get(params[:id]).destroy
+			[OK, response.to_json]
+		rescue => error
+			handle_error(error)
+		end
+	end
+
+	##~ a = sapi.apis.add
+  	##~ a.set :path => "/api/v1/cloud_management/aws/compute/network_acls/:id/add_rule"
+  	##~ a.description = "Manage rules in Network Acls on the cloud (AWS)"
+  	##~ op = a.operations.add
+  	##~ op.responseClass = "Rules"
+  	##~ op.set :httpMethod => "POST"
+  	##~ op.summary = "Add Network Acl Rule (AWS cloud)"
+  	##~ op.nickname = "add_network_acl_rule"
+  	##~ op.parameters.add :name => "id", :description => "Network ACL ID", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "path"  
+  	##~ op.errorResponses.add :reason => "Success, network acl rule created", :code => 200
+  	##~ op.errorResponses.add :reason => "Invalid Parameters", :code => 400
+  	##~ op.parameters.add :name => "cred_id", :description => "Cloud credential to use", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "query"
+  	##~ op.parameters.add :name => "region", :description => "Cloud region to examine", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "query"
+	post '/network_acls/:id/add_rule' do
+		json_body = body_to_json_or_die("body" => request)
+		begin
+			response = @compute.create_network_acl_entry(params[:id], json_body["rule_number"],json_body["protocol"],json_body["rule_action"],json_body["cidr_block"],json_body["egress"], json_body["options"])
+			[OK, response.to_json]
+		rescue => error
+			handle_error(error)
+		end
+	end
+
+	##~ a = sapi.apis.add
+  	##~ a.set :path => "/api/v1/cloud_management/aws/compute/network_acls/:id/delete_rule"
+  	##~ a.description = "Manage Network ACL rules cloud (AWS)"
+  	##~ op = a.operations.remove
+  	##~ op.responseClass = "Boolean"
+  	##~ op.set :httpMethod => "POST"
+  	##~ op.summary = "Delete Network ACL Rule (AWS cloud)"
+  	##~ op.nickname = "delete_network_acl_rule"
+  	##~ op.parameters.add :name => "id", :description => "Network ACL ID", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "path"  
+  	##~ op.errorResponses.add :reason => "Success, network acl rule deleted", :code => 200
+  	##~ op.errorResponses.add :reason => "Invalid Parameters", :code => 400
+  	##~ op.parameters.add :name => "cred_id", :description => "Cloud credential to use", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "query"
+  	##~ op.parameters.add :name => "region", :description => "Cloud region to examine", :dataType => "string", :allowMultiple => false, :required => true, :paramType => "query"
+	post '/network_acls/:id/delete_rule' do
+		json_body = body_to_json_or_die("body" => request)
+		begin
+			response = @compute.delete_network_acl_entry(params[:id],json_body["rule_number"],json_body["egress"])
 			[OK, response.to_json]
 		rescue => error
 			handle_error(error)
